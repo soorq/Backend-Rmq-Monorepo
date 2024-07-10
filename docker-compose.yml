@@ -1,0 +1,70 @@
+version: '3.7'
+
+services:
+  root:
+    container_name: root
+    hostname: root
+    build:
+      context: .
+      dockerfile: ./apps/root_app/Dockerfile
+      target: development
+    command: npm run start:dev root_app
+    env_file:
+      - ./apps/root_app/.env
+    ports:
+      - "1010:1010"
+    depends_on:
+      - auth
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  post:
+    container_name: post
+    hostname: post
+    build:
+      context: .
+      dockerfile: ./apps/post/Dockerfile
+      target: development
+    command: npm run start:dev post
+    env_file:
+      - ./apps/post/.env
+    depends_on:
+      - auth
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  auth:
+    container_name: auth
+    hostname: auth
+    build:
+      context: .
+      dockerfile: ./apps/auth/Dockerfile
+      target: development
+    command: npm run start:dev auth
+    ports:
+      - '1011:1011'
+    env_file:
+      - ./apps/auth/.env
+    depends_on:
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    env_file:
+      - ./.env
+    restart: always
+    ports:
+      - '15672:15672'
+      - '5672:5672'
+    volumes:
+      - /var/lib/rabbitmq
+
+volumes:
+  rabbitmq_data:
